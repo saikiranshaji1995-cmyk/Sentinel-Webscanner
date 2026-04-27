@@ -1,0 +1,5 @@
+# Open redirect payloads to detect unsafe external redirects.
+https://example.com
+//example.com/%2f
+https://example.com/login
+

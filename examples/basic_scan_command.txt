@@ -1,0 +1,2 @@
+python main.py -t "https://testphp.vulnweb.com/listproducts.php?cat=1" --depth 1 --threads 10 -o reports/demo_report.json
+

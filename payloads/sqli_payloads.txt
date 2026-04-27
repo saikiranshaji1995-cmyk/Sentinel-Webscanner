@@ -1,0 +1,8 @@
+# SQL injection payloads for non-destructive error-based detection.
+' OR '1'='1
+" OR "1"="1
+' OR 1=1--
+" OR 1=1--
+' AND 'x'='x
+' UNION SELECT NULL--
+
