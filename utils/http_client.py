@@ -31,6 +31,7 @@ class HTTPClient:
     def request(self, method: str, url: str, **kwargs: Any) -> Optional[Response]:
         kwargs.setdefault("timeout", self.timeout)
         kwargs.setdefault("verify", self.verify_tls)
+        kwargs.setdefault("allow_redirects", False)
         try:
             response = self.session.request(method=method.upper(), url=url, **kwargs)
             return response

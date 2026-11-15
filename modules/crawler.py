@@ -33,7 +33,7 @@ class Crawler:
 
     def crawl(self, start_url: str, max_depth: int = 1, max_pages: int = 50) -> CrawlResult:
         parsed_start = urlparse(start_url)
-        if not parsed_start.scheme or not parsed_start.netloc:
+        if parsed_start.scheme.lower() not in {"http", "https"} or not parsed_start.hostname:
             raise ValueError(f"Invalid target URL: {start_url}")
 
         allowed_domain = parsed_start.netloc
@@ -57,7 +57,7 @@ class Crawler:
                 continue
 
             soup = BeautifulSoup(response.text, "html.parser")
-            result.forms.extend(self._extract_forms(soup, current_url))
+            result.forms.extend(self._extract_forms(soup, current_url, allowed_domain))
 
             for next_url in self._extract_links(soup, current_url, allowed_domain):
                 if next_url not in visited:
@@ -72,10 +72,14 @@ class Crawler:
         return urlunparse(cleaned)
 
     @staticmethod
-    def _extract_forms(soup: BeautifulSoup, source_url: str) -> List[FormDetails]:
+    def _extract_forms(soup: BeautifulSoup, source_url: str, allowed_domain: str) -> List[FormDetails]:
         forms: List[FormDetails] = []
         for form in soup.find_all("form"):
-            action = form.get("action") or source_url
+            action = urljoin(source_url, form.get("action") or source_url)
+            parsed_action = urlparse(action)
+            if parsed_action.scheme.lower() not in {"http", "https"} or parsed_action.netloc.lower() != allowed_domain.lower():
+                continue
+            action = urlunparse(parsed_action._replace(fragment=""))
             method = (form.get("method") or "get").lower()
             input_names: List[str] = []
 
@@ -106,7 +110,7 @@ class Crawler:
 
             candidate = urljoin(current_url, href)
             parsed = urlparse(candidate)
-            if parsed.netloc != allowed_domain:
+            if parsed.scheme.lower() not in {"http", "https"} or parsed.netloc.lower() != allowed_domain.lower():
                 continue
 
             normalized = urlunparse(parsed._replace(fragment=""))
