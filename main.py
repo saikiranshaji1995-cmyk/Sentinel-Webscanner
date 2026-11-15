@@ -8,6 +8,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
+from urllib.parse import urlparse
 
 from modules.crawler import Crawler
 from modules.headers_scanner import HeaderScanner
@@ -30,6 +31,7 @@ def parse_args() -> argparse.Namespace:
         "-t",
         "--target",
         required=True,
+        type=validate_target_url,
         help="Target URL to scan (for example: https://testphp.vulnweb.com).",
     )
     parser.add_argument(
@@ -84,6 +86,15 @@ def parse_args() -> argparse.Namespace:
         help="Path to log file (default: scanner.log).",
     )
     return parser.parse_args()
+
+
+def validate_target_url(value: str) -> str:
+    parsed = urlparse(value)
+    if parsed.scheme.lower() not in {"http", "https"} or not parsed.hostname:
+        raise argparse.ArgumentTypeError("Target must be an absolute HTTP or HTTPS URL.")
+    if parsed.username or parsed.password:
+        raise argparse.ArgumentTypeError("Credentials are not allowed in the target URL.")
+    return value
 
 
 def build_modules(
